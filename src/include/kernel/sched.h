@@ -58,14 +58,16 @@ struct schedee {
 	 *
 	 * It has to restore ipl as soon as possible.
 	 *
-	 * Returns schedee to which context switched.
+	 * Returns schedee which was passed as next.
 	 */
-	struct schedee    *(*process)(struct schedee *prev, struct schedee *next);
+	struct schedee *(*process)(struct schedee *prev, struct schedee *next);
 
 	/* Fields corresponding to the state in the scheduler state machine. */
 	unsigned int active;  /**< Running on a CPU. TODO SMP-only. */
 	unsigned int ready;   /**< Managed by the scheduler. */
 	unsigned int waiting; /**< Waiting for an event. */
+
+	unsigned int has_stack;
 
 	struct affinity         affinity;
 	struct sched_timing     sched_timing;
@@ -95,7 +97,7 @@ extern int sched_init(struct schedee *current);
  * @return
  *   The operation result. At the moment always success.
  */
-extern int schedee_init(struct schedee *schedee, int priority,
+extern int schedee_init(struct schedee *schedee, int priority, int has_stack,
 	struct schedee *(*process)(struct schedee *prev, struct schedee *next));
 
 extern void sched_set_current(struct schedee *schedee);

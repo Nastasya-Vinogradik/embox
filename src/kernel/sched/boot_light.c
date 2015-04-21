@@ -1,10 +1,12 @@
 /**
  * @file
- * @brief Pseudo thread as boot thread. It cannot use sync functions.
+ * @brief Pseudo thread as boot thread. Use it only in case of stackless-only
+ * schedees. It is able to use synchronization functions.
  *
  * @author  Vita Loginova
  * @date    08.12.2014
  */
+#include <stdbool.h>
 
 #include <kernel/panic.h>
 
@@ -25,6 +27,6 @@ static struct schedee *boot_process(struct schedee *prev, struct schedee *next) 
 
 struct schedee *boot_thread_create(void)
 {
-	schedee_init(&boot_schedee, SCHED_PRIORITY_HIGH, boot_process);
+	schedee_init(&boot_schedee, SCHED_PRIORITY_HIGH, true, boot_process);
 	return &boot_schedee;
 };

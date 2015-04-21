@@ -31,11 +31,11 @@ static struct schedee *lthread_process(struct schedee *prev,
 
 	lt->label_offset = (int)lt->run(lt);
 
-	return NULL;
+	return next;
 }
 
 void lthread_init(struct lthread *lt, int (*run)(struct lthread *)) {
-	schedee_init(&lt->schedee, SCHED_PRIORITY_HIGH, lthread_process);
+	schedee_init(&lt->schedee, SCHED_PRIORITY_HIGH, false, lthread_process);
 	sched_wait_info_init(&lt->info);
 
 	lt->run = run;

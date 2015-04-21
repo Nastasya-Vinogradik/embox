@@ -65,9 +65,8 @@ int sched_init(struct schedee *current) {
 	return 0;
 }
 
-int schedee_init(struct schedee *schedee, int priority,
-	struct schedee *(*process)(struct schedee *prev, struct schedee *next))
-{
+int schedee_init(struct schedee *schedee, int priority, int has_stack,
+	struct schedee * (*process)(struct schedee *prev, struct schedee *next)) {
 	runq_item_init(&schedee->runq_link);
 
 	schedee->lock = SPIN_UNLOCKED;
@@ -77,6 +76,8 @@ int schedee_init(struct schedee *schedee, int priority,
 	schedee->ready = false;
 	schedee->active = false;
 	schedee->waiting = true;
+
+	schedee->has_stack = has_stack;
 
 	schedee_priority_init(schedee, priority);
 	sched_affinity_init(&schedee->affinity);
@@ -362,8 +363,7 @@ void sched_start_switch(struct schedee *next) {
 }
 
 static void __schedule(int preempt) {
-	struct schedee *prev;
-	struct schedee *next;
+	struct schedee *prev, *next, *last;
 
 	prev = schedee_get_current();
 
@@ -390,18 +390,16 @@ static void __schedule(int preempt) {
 		spin_unlock(&rq.lock);
 
 		schedee_set_current(next);
+		last = next->process(prev, next); /* restores ipl */
 
-		/* next->process has to restore ipl. */
-		next = next->process(prev, next);
-
-		if (next) {
+		if (last->has_stack) {
 			break;
 		}
 
 		spin_lock_ipl(&rq.lock);
 	}
 
-	sched_timing_start(next);
+	sched_timing_start(last);
 }
 
 void schedule(void) {
